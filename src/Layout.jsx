@@ -1,14 +1,14 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import UserLogin from "./components/UserLogin";
-import AllBlogs from "./components/AlllBlogs";
+import Footer from "./components/Footer";
 
 function Layout() {
   return (
     <>
       <UserLogin />
-      <AllBlogs />
       <Outlet />
+      <Footer />
     </>
   );
 }

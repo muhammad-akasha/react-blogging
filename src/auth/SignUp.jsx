@@ -1,172 +1,293 @@
-import React from "react";
-import {
-  createUserWithEmailAndPassword,
-  auth,
-  updateProfile,
-  storage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-} from "../firebase/firebaseConfig";
+import React, { useEffect, useState } from "react";
+import { auth, onAuthStateChanged } from "../firebase/firebaseConfig";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Triangle } from "react-loader-spinner";
+import { createUser } from "../firebase/firebaseFunc.js";
+import Swal from "sweetalert2";
 
 function SignUp() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        navigate("/");
+      }
+      setLoading(false);
+    });
+  }, []);
   const {
     register,
     handleSubmit,
+    watch,
+    getValues,
     formState: { errors },
   } = useForm();
 
+  const password = watch("password", "");
+
   async function loggedIn(data) {
-    if (!data) {
+    const { email, password, profile, first_name, last_name, repeat_password } =
+      data;
+    if (
+      !email ||
+      !password ||
+      !profile ||
+      !first_name ||
+      !last_name ||
+      !repeat_password
+    ) {
       return;
     }
     try {
-      // Create user with email and password
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
-      );
-      const user = userCredential.user;
-      const storageRef = ref(storage, `profilePic/${data.profile[0].name}`); // create a ref in firebase storage
-
-      // Uploading the image
-      await uploadBytes(storageRef, data.profile[0]); // adding image in storage
-
-      // Getting the URL of the profile picture
-      const url = await getDownloadURL(storageRef); //getting url of profile picture
-      console.log(url);
-
-      // Update user profile
-      await updateProfile(auth.currentUser, {
-        displayName: `${data.first_name} ${data.last_name}`,
-        photoURL: url,
-      });
-
+      await createUser(email, password, profile, first_name, last_name);
       navigate("/");
     } catch (error) {
-      const errorCode = error.code;
       const errorMessage = error.message;
-      console.log(`Error (${errorCode}): ${errorMessage}`);
+      Swal.fire({
+        icon: "error",
+        title: "Auth Error",
+        text: errorMessage,
+      });
     }
   }
   return (
-    <div className="mt-[50px] shadow-lg w-[90%] sm:w-[500px]  md:w-[500px] p-[50px] rounded-md m-auto">
-      <h2 className="text-center text-[26px] font-semibold">Sign up</h2>
-      <form className="max-w-md mx-auto" onSubmit={handleSubmit(loggedIn)}>
-        <div className="relative z-0 w-full mb-5 group">
-          <label
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            htmlFor="file_input"
-          >
-            Upload Profile Picture
-          </label>
-          <input
-            className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-            id="file_input"
-            type="file"
-            {...register("profile")}
-            accept=".jpeg, .png, .jpg"
+    <>
+      {loading ? (
+        <div className="absolute top-0 flex justify-center items-center w-full h-full bg-black">
+          <Triangle
+            visible={true}
+            height="100"
+            width="100"
+            color="#fff"
+            ariaLabel="triangle-loading"
           />
         </div>
-        <div className="relative z-0 w-full mb-5 group">
-          <input
-            type="email"
-            name="email"
-            id="floating_email"
-            className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-            placeholder=" "
-            {...register("email")}
-            required=""
-          />
-          <label
-            htmlFor="email"
-            className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-          >
-            Email address
-          </label>
-        </div>
-        <div className="relative z-0 w-full mb-5 group">
-          <input
-            type="password"
-            name="password"
-            id="password"
-            className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-            placeholder=" "
-            {...register("password")}
-            required=""
-          />
-          <label
-            htmlFor="password"
-            className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-          >
-            Password
-          </label>
-        </div>
-        <div className="relative z-0 w-full mb-5 group">
-          <input
-            type="password"
-            name="repeat_password"
-            id="floating_repeat_password"
-            className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-            placeholder=" "
-            {...register("repeat_password")}
-            required=""
-          />
-          <label
-            htmlFor="repeat_password"
-            className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-          >
-            Confirm password
-          </label>
-        </div>
-        <div className="grid md:grid-cols-2 md:gap-6">
-          <div className="relative z-0 w-full mb-5 group">
-            <input
-              type="text"
-              name="first_name"
-              id="first_name"
-              className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-              placeholder=" "
-              required=""
-              {...register("first_name")}
-            />
-            <label
-              htmlFor="first_name"
-              className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-            >
-              First name
-            </label>
-          </div>
-          <div className="relative z-0 w-full mb-5 group">
-            <input
-              type="text"
-              name="last_name"
-              id="last_name"
-              className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
-              placeholder=" "
-              {...register("last_name")}
-              required=""
-            />
-            <label
-              htmlFor="last_name"
-              className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
-            >
-              Last name
-            </label>
-          </div>
-        </div>
-        <button
-          type="submit"
-          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+      ) : (
+        <div
+          className="h-full flex items-center"
+          style={{
+            background:
+              "linear-gradient(90deg, hsla(217, 100%, 50%, 1) 0%, hsla(186, 100%, 69%, 1) 100%)",
+          }}
         >
-          Submit
-        </button>
-      </form>
-    </div>
+          <div className="shadow-lg w-[90%] sm:w-[600px] p-[50px] rounded-md m-auto bg-[#f9f9f9] my-12">
+            <h2 className="text-center text-[30px] font-semibold mb-10">
+              Welcome to Signup Page
+            </h2>
+            <form
+              className="max-w-md mx-auto"
+              onSubmit={handleSubmit(loggedIn)}
+            >
+              {/* Profile Picture Upload */}
+              <div className="relative z-0 w-full mb-5 group">
+                <label
+                  className="block mb-2 text-sm font-medium text-gray-900"
+                  htmlFor="file_input"
+                >
+                  Upload Profile Picture
+                </label>
+                <input
+                  className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
+                  id="file_input"
+                  type="file"
+                  {...register("profile", {
+                    required: "Profile Picture is Required",
+                  })}
+                  accept=".jpeg, .png, .jpg"
+                />
+                <p
+                  style={{
+                    color: "red",
+                    opacity: errors.profile ? 1 : 0,
+                    height: "auto",
+                    transition: "opacity 0.5s ease, height 0.5s ease",
+                    marginTop: "10px",
+                    fontSize: 13,
+                  }}
+                >
+                  {errors.profile?.message}
+                </p>
+              </div>
+              {/* Email Input */}
+              <div className="relative z-0 w-full mb-5 group">
+                <input
+                  type="email"
+                  className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                  placeholder=" "
+                  {...register("email", { required: "Email is required" })}
+                />
+
+                <label
+                  htmlFor="email"
+                  className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                >
+                  Email Address
+                </label>
+                <p
+                  style={{
+                    color: "red",
+                    opacity: errors.email ? 1 : 0,
+                    height: "auto",
+                    transition: "opacity 0.5s ease, height 0.5s ease",
+                    marginTop: "10px",
+                    fontSize: 13,
+                  }}
+                >
+                  {errors.email?.message}
+                </p>
+              </div>
+
+              {/* Password Input */}
+              <div className="relative z-0 w-full mb-5 group">
+                <input
+                  type="password"
+                  className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                  placeholder=" "
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 7,
+                      message: "Password should be at least 7 characters long",
+                    },
+                  })}
+                />
+                <p
+                  style={{
+                    color: "red",
+                    opacity: errors.password ? 1 : 0,
+                    height: "auto",
+                    transition: "opacity 0.5s ease, height 0.5s ease",
+                    marginTop: "10px",
+                    fontSize: 13,
+                  }}
+                >
+                  {errors.password?.message}
+                </p>
+                <label
+                  htmlFor="password"
+                  className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                >
+                  Password
+                </label>
+              </div>
+
+              {/* Confirm Password Input */}
+              <div className="relative z-0 w-full mb-5 group">
+                <input
+                  type="password"
+                  className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                  placeholder=" "
+                  {...register("repeat_password", {
+                    required: "Repeat password is required",
+                    validate: (value) =>
+                      value === getValues("password") ||
+                      "Passwords do not match",
+                  })}
+                />
+                <p
+                  style={{
+                    color: "red",
+                    opacity: errors.repeat_password ? 1 : 0,
+                    height: "auto",
+                    transition: "opacity 0.5s ease, height 0.5s ease",
+                    marginTop: "10px",
+                    fontSize: 13,
+                  }}
+                >
+                  {errors.repeat_password?.message}
+                </p>
+                <label
+                  htmlFor="repeat_password"
+                  className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                >
+                  Confirm Password
+                </label>
+              </div>
+
+              {/* First Name Input */}
+              <div className="grid md:grid-cols-2 md:gap-6">
+                <div className="relative z-0 w-full mb-5 group">
+                  <input
+                    type="text"
+                    className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                    placeholder=" "
+                    {...register("first_name", {
+                      required: "First Name is required",
+                    })}
+                  />
+                  <p
+                    style={{
+                      color: "red",
+                      opacity: errors.first_name ? 1 : 0,
+                      height: "auto",
+                      transition: "opacity 0.5s ease, height 0.5s ease",
+                      marginTop: "10px",
+                      fontSize: 13,
+                    }}
+                  >
+                    {errors.first_name?.message}
+                  </p>
+                  <label
+                    htmlFor="first_name"
+                    className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                  >
+                    First Name
+                  </label>
+                </div>
+
+                {/* Last Name Input */}
+                <div className="relative z-0 w-full mb-5 group">
+                  <input
+                    type="text"
+                    className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
+                    placeholder=" "
+                    {...register("last_name", {
+                      required: "Last Name is required",
+                    })}
+                  />
+                  <p
+                    style={{
+                      color: "red",
+                      opacity: errors.last_name ? 1 : 0,
+                      height: "auto",
+                      transition: "opacity 0.5s ease, height 0.5s ease",
+                      marginTop: "10px",
+                      fontSize: 13,
+                    }}
+                  >
+                    {errors.last_name?.message}
+                  </p>
+                  <label
+                    htmlFor="last_name"
+                    className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6"
+                  >
+                    Last Name
+                  </label>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="text-white bg-blue-700 hover:bg-blue-800 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+              >
+                Sign up
+              </button>
+            </form>
+
+            {/* Link to Sign In */}
+            <div className="text-center mt-4">
+              Already have an account?{" "}
+              <Link className="font-semibold text-red-950" to={"/login"}>
+                Sign in
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

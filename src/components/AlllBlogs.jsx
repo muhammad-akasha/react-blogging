@@ -1,41 +1,88 @@
 import React, { useEffect, useState } from "react";
 import { collection, db, getDocs } from "../firebase/firebaseConfig";
-import Card from "./card";
+import { Triangle } from "react-loader-spinner";
+import { Outlet } from "react-router-dom";
+import Card from "./Card";
+import { getUserBlogs } from "../firebase/firebaseFunc";
 
 function AllBlogs() {
   const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(true); // Set loading to true initially
+  const [greet, setGreet] = useState(null);
 
   const getAllBlogs = async () => {
     try {
-      const querySnapshot = await getDocs(collection(db, "blogs"));
-      const blogsData = [];
-      querySnapshot.forEach((doc) => {
-        blogsData.push({ ...doc.data(), id: doc.id });
-        console.log(doc.id, " => ", doc.data()); // Log each document's data
-      });
-      setBlogs(blogsData); // Update state with the collected data
+      const { allUserData } = await getUserBlogs("", "blogs");
+      setBlogs([...allUserData]);
     } catch (error) {
       console.error("Error fetching blogs:", error); // Error handling
+      setLoading(true); // Set loading to false in case of error
+    }
+  };
+  const greetingFunc = () => {
+    const currentDate = new Date();
+    const hour = currentDate.getHours();
+    let timePeriod;
+    if (hour > 12) {
+      timePeriod = hour % 12;
+    } else if (hour === 0) {
+      timePeriod = 12;
+    } else {
+      timePeriod = hour;
+    }
+    const time = `${timePeriod.toString().padStart(2, "0")} : ${currentDate
+      .getMinutes()
+      .toString()
+      .padStart(2, "0")}`;
+    if (hour >= 5 && hour <= 11) {
+      setGreet(
+        `Good Morning! it's  ${time} ${hour >= 0 && hour < 12 ? "AM" : "PM"}`
+      );
+    } else if (hour >= 12 && hour <= 17) {
+      setGreet(`Good After Noon! it's ${time} PM`);
+    } else if (hour >= 18 && hour <= 21) {
+      setGreet(`Good Evening! it's ${time} PM`);
+    } else {
+      setGreet(
+        `Good Night! Sweet Dreams it's ${time} ${
+          hour >= 0 && hour < 12 ? "AM" : "PM"
+        } `
+      );
     }
   };
 
-  useEffect(() => {
-    getAllBlogs();
-  }, []);
-
   return (
     <div>
-      {blogs.length > 0 ? (
-        <div className="flex justify-center gap-3 flex-wrap">
-          {blogs.map((item, index) => (
-            <div key={item.id}>
-              <Card title={item.blogTitle} img={item.blogUrl} />
-            </div>
-          ))}
+      {loading ? (
+        <div className="absolute top-0 flex justify-center items-center w-full h-full bg-black">
+          <Triangle
+            visible={true}
+            height="100"
+            width="100"
+            color="#fff"
+            ariaLabel="triangle-loading"
+            wrapperStyle={{}}
+            wrapperClass=""
+          />
         </div>
       ) : (
-        <h2>Loading...</h2>
+        <>
+          <h1 className="mt-6 pl-4 text-[27px]">{greet && greet}</h1>
+          <div className="flex justify-center gap-5 flex-wrap mt-10">
+            {blogs.map((item) => (
+              <div key={item.id}>
+                <Card
+                  title={item.blogTitle}
+                  img={item.blogUrl}
+                  id={item.id}
+                  uid={item.uid}
+                />
+              </div>
+            ))}
+          </div>
+        </>
       )}
+      <Outlet />
     </div>
   );
 }

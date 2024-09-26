@@ -1,31 +1,23 @@
 import { onAuthStateChanged, auth, signOut } from "../firebase/firebaseConfig";
-import React, { createContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-
-export const userContext = createContext();
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 function UserLogin() {
+  const location = useLocation();
   const navigate = useNavigate();
   const [currUser, setCurrUser] = useState();
-  const [loading, setLoading] = useState(false);
-
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        const uid = user.uid;
         setCurrUser(user);
-        navigate("/");
-        setLoading(true);
-      } else {
-        navigate("/login");
       }
     });
-  }, [navigate]);
+  }, []);
 
   const logout = () => {
     signOut(auth)
       .then(() => {
-        navigate("/login");
+        setCurrUser(false);
       })
       .catch((error) => {
         console.log(error);
@@ -33,12 +25,19 @@ function UserLogin() {
   };
 
   const addBlog = () => {
-    navigate(`/addblog/${currUser.uid}`);
+    if (location.pathname !== "/addblog") {
+      navigate("/addblog");
+    }
+  };
+  const profilePage = () => {
+    if (location.pathname !== "/profilepage") {
+      navigate("/profilepage");
+    }
   };
 
   return (
     <>
-      {loading ? (
+      {currUser ? (
         <div className="drawer">
           <input id="my-drawer-3" type="checkbox" className="drawer-toggle" />
           <div className="drawer-content flex flex-col">
@@ -70,10 +69,15 @@ function UserLogin() {
                 <ul className="menu menu-horizontal items-center">
                   {/* Navbar menu content here */}
                   <li>
-                    <div className="flex gap-2">
+                    <Link style={{ color: "#fff" }} to={"/"}>
+                      Home
+                    </Link>
+                  </li>
+                  <li>
+                    <div className="flex gap-2" onClick={profilePage}>
                       <img
                         className="rounded-[50%] size-[60px] bg-cover"
-                        src={currUser.photoURL}
+                        src={currUser.photoURL || "srcimageimages.png"}
                         alt="profilepic"
                       />
                       <a>{currUser.displayName}</a>
@@ -97,11 +101,16 @@ function UserLogin() {
             ></label>
             <ul className="menu bg-base-200 min-h-full w-80 p-4">
               <li>
-                <div className="flex gap-2">
+                <Link style={{ color: "#fff" }} to={"/"}>
+                  Home
+                </Link>
+              </li>
+              <li>
+                <div className="flex gap-2" onClick={profilePage}>
                   <img
-                    className="rounded-[50%] size-[40px] bg-cover"
-                    src={currUser.photoURL}
-                    alt="profilepic"
+                    className="rounded-full w-[40px] h-[40px] bg-cover"
+                    src={currUser.photoURL || "srcimageimages.png"}
+                    alt="profile pic"
                   />
                   <a>{currUser.displayName}</a>
                 </div>
@@ -116,7 +125,74 @@ function UserLogin() {
           </div>
         </div>
       ) : (
-        <h2>Loading...</h2>
+        <div>
+          <div className="drawer">
+            <input id="my-drawer-3" type="checkbox" className="drawer-toggle" />
+            <div className="drawer-content flex flex-col">
+              {/* Navbar */}
+              <div className="navbar bg-[#494949] text-white w-full">
+                <div className="flex-none lg:hidden">
+                  <label
+                    htmlFor="my-drawer-3"
+                    aria-label="open sidebar"
+                    className="btn btn-square btn-ghost"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      className="inline-block h-6 w-6 stroke-current"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M4 6h16M4 12h16M4 18h16"
+                      ></path>
+                    </svg>
+                  </label>
+                </div>
+                <div className="mx-2 flex-1 px-2">React Blog App</div>
+                <div className="hidden flex-none lg:block">
+                  <ul className="menu menu-horizontal items-center">
+                    {/* Navbar menu content here */}
+                    <li>
+                      <Link style={{ color: "#fff" }} to={"/"}>
+                        Home
+                      </Link>
+                    </li>
+                    <li>
+                      <Link to={"/login"}>Sign in</Link>
+                    </li>
+                    <li>
+                      <Link to={"/signup"}>Sign Up</Link>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-side">
+              <label
+                htmlFor="my-drawer-3"
+                aria-label="close sidebar"
+                className="drawer-overlay"
+              ></label>
+              <ul className="menu bg-base-200 min-h-full w-80 p-4">
+                <li>
+                  <Link style={{ color: "#fff" }} to={"/"}>
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link to={"/login"}>Sign in</Link>
+                </li>
+                <li>
+                  <Link to={"/signup"}>Sign Up</Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

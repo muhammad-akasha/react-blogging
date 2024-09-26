@@ -1,120 +1,172 @@
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 import {
   db,
-  collection,
-  addDoc,
-  storage,
-  ref,
-  getDownloadURL,
-  uploadBytes,
   onAuthStateChanged,
   auth,
+  doc,
+  deleteDoc,
 } from "./../firebase/firebaseConfig";
+import { getUserBlogs, addingBlogToFirestore } from "../firebase/firebaseFunc";
+import UserCard from "./UserCard";
+import BlogForm from "./BlogForm";
+import { useForm } from "react-hook-form";
+import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
+import { Triangle } from "react-loader-spinner";
 
 function AddBlog() {
-  const [user, setUser] = useState();
+  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
+  const [user, setUser] = useState(null); // Changed initial state to null
+  const [userBlogs, setUserBlogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
+      } else {
+        setUser(null); // Reset user when logged out
       }
     });
   }, []);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
+  useEffect(() => {
+    if (user) {
+      const getData = async () => {
+        setLoading(true);
+        try {
+          const { singleUserData } = await getUserBlogs(user.uid, "blogs");
+          setUserBlogs(singleUserData);
+        } catch (error) {
+          console.error("Error fetching blogs:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      getData();
+    }
+  }, [user]); // Add user as a dependency
 
   const addingBlog = async (data) => {
-    console.log(data);
-
     const { blogImg, blogTitle, blogMessage } = data;
 
+    if (!blogImg || !blogTitle || !blogMessage) {
+      return;
+    }
+    setIsSubmitting(true);
+
     try {
-      const storageRef = ref(storage, `BlogImage/${blogImg[0].name}`); // create a ref in firebase storage
+      const { blogUrl, docId } = await addingBlogToFirestore(
+        // calling addBlog Function to save blog in firestore and recieving blogImage url and id
+        "blogImage", // folder Ref
+        blogImg, // image file
+        "blogs", // collection name
+        blogTitle, // title
+        blogMessage, // description
+        user // current login user
+      );
 
-      // Uploading the image
-      await uploadBytes(storageRef, blogImg[0]); // adding image in storage
-
-      // Getting the URL of the profile picture
-      const blogUrl = await getDownloadURL(storageRef); //getting url of profile picture
-
-      // Add a new document with a generated id.
-      const docRef = await addDoc(collection(db, "blogs"), {
+      const newBlog = {
         blogUrl,
         blogTitle,
         blogMessage,
         uid: user.uid,
         userName: user.displayName,
         userPic: user.photoURL,
+        id: docId,
+      };
+      setUserBlogs((prevBlogs) => [newBlog, ...prevBlogs]);
+      Swal.fire({
+        position: "top",
+        icon: "success",
+        title: "Your Blog Has Been Added",
+        showConfirmButton: false,
+        timer: 1500,
       });
+      reset(); // Reset the form fields
     } catch (error) {
-      console.log(error);
+      console.error("Error adding blog:", error);
+      Swal.fire({
+        position: "top",
+        icon: "error",
+        title: error,
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    }
+    setIsSubmitting(false);
+  };
+
+  const editBlog = (id) => {
+    navigate(`/editblog/${id}`);
+  };
+
+  const deleteBlog = async (id, index) => {
+    try {
+      await deleteDoc(doc(db, "blogs", id));
+      userBlogs.splice(index, 1);
+      setUserBlogs([...userBlogs]);
+    } catch (error) {
+      console.error("Error deleting blog:", error);
     }
   };
+
   return (
-    <div className="mt-[50px] shadow-lg w-[90%] sm:w-[500px]  md:w-[500px] p-[50px] rounded-md m-auto">
-      <h2 className="text-center text-[26px] font-semibold">ADD BLOG</h2>
-      <form className="max-w-sm mx-auto" onSubmit={handleSubmit(addingBlog)}>
-        <div className="mb-5">
-          <label
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-            htmlFor="blogImg"
-          >
-            Upload blog image
-          </label>
-          <input
-            className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-            aria-describedby="user_avatar_help"
-            id="user_avatar"
-            type="file"
-            {...register("blogImg")}
+    <>
+      {loading ? (
+        <div className="absolute top-0 flex justify-center items-center w-full h-full bg-black">
+          <Triangle
+            visible={true}
+            height="100"
+            width="100"
+            color="#fff"
+            ariaLabel="triangle-loading"
+            wrapperStyle={{}}
+            wrapperClass=""
           />
         </div>
-        <div className="mb-5">
-          <label
-            htmlFor="blogTitle"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Blog Title
-          </label>
-          <input
-            type="text"
-            id="blogTitle"
-            className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light"
-            placeholder="blog title"
-            required=""
-            {...register("blogTitle")}
+      ) : (
+        <>
+          <BlogForm
+            addingBlog={addingBlog}
+            register={register}
+            handleSubmit={handleSubmit}
+            errors={errors}
+            isRequired={true}
+            isSubmitting={isSubmitting}
           />
-        </div>
-        <div className="mb-5">
-          <label
-            htmlFor="message"
-            className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-          >
-            Your message
-          </label>
-          <textarea
-            id="message"
-            rows={4}
-            className="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-            placeholder="Leave a comment..."
-            defaultValue={""}
-            {...register("blogMessage")}
-          />
-        </div>
-        <button
-          type="submit"
-          className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
-        >
-          Add Blog
-        </button>
-      </form>
-    </div>
+          {/* Blog rendering */}
+          <h2 className="text-center font-semibold text-[30px] my-10">
+            User Blogs
+          </h2>
+          {userBlogs.length > 0 ? (
+            userBlogs.map((item, index) => (
+              <div key={item.id}>
+                <UserCard
+                  id={item.id}
+                  blogUrl={item.blogUrl}
+                  blogTitle={item.blogTitle}
+                  index={index}
+                  blogMessage={item.blogMessage}
+                  editBlog={editBlog}
+                  deleteBlog={deleteBlog}
+                  display={"inline"}
+                />
+              </div>
+            ))
+          ) : (
+            <p className="text-center mt-5">NO BLOGS FOUND!</p>
+          )}
+        </>
+      )}
+    </>
   );
 }
 

@@ -6,12 +6,46 @@ import Layout from "./Layout";
 import Login from "./auth/Login";
 import SignUp from "./auth/SignUp";
 import UserLogin from "./components/UserLogin";
-import AddBlog from "./components/addBlog";
+import AddBlog from "./components/AddBlog";
+import SingleBlog from "./components/SingleBlog";
+import AllBlogs from "./components/AlllBlogs";
+import ProtectedRoute from "./components/ProtectedRoute";
+import SelectedUserBlog from "./components/SelectedUserBlog";
+import EditBlog from "./components/EditBlog";
+import ProfilePage from "./components/ProfilePage";
+import NotFound from "./components/NotFound";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
+    children: [
+      {
+        path: "",
+        element: <AllBlogs />,
+      },
+
+      {
+        path: "addblog",
+        element: <ProtectedRoute component={<AddBlog />} />,
+      },
+      {
+        path: "singleblog/:id",
+        element: <SingleBlog />,
+      },
+      {
+        path: "selecteduserblog/:uid",
+        element: <SelectedUserBlog />,
+      },
+      {
+        path: "editblog/:id",
+        element: <EditBlog />,
+      },
+      {
+        path: "profilepage",
+        element: <ProtectedRoute component={<ProfilePage />} />,
+      },
+    ],
   },
   {
     path: "login",
@@ -26,8 +60,8 @@ const router = createBrowserRouter([
     element: <UserLogin />,
   },
   {
-    path: "addblog/:uid",
-    element: <AddBlog />,
+    path: "*",
+    element: <NotFound />,
   },
 ]);
 

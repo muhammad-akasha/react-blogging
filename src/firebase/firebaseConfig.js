@@ -1,7 +1,16 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  getDoc,
+  doc,
+  deleteDoc,
+  updateDoc,
+} from "firebase/firestore";
 
 import {
   getAuth,
@@ -10,8 +19,13 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
+  GithubAuthProvider,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  signInWithPopup,
 } from "firebase/auth";
 
+// firebase config
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -45,4 +59,12 @@ export {
   collection,
   addDoc,
   getDocs,
+  getDoc,
+  doc,
+  updateDoc,
+  deleteDoc,
+  signInWithPopup,
+  GithubAuthProvider,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
 };

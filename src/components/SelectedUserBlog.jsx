@@ -15,6 +15,7 @@ function SelectedUserBlog() {
         const { singleUserData } = await getUserBlogs(uid, "blogs");
         setUserBlog([...singleUserData]);
         setUserDetail(singleUserData[0]);
+        console.log(singleUserData);
       } catch (error) {
         console.log(error);
       }
@@ -41,6 +42,8 @@ function SelectedUserBlog() {
                 blogTitle={item.blogTitle}
                 index={index}
                 blogMessage={item.blogMessage}
+                display="hidden"
+                date={item.date}
               />
             </div>
           ))}

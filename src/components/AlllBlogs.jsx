@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { collection, db, getDocs } from "../firebase/firebaseConfig";
 import { Triangle } from "react-loader-spinner";
 import { Outlet } from "react-router-dom";
 import Card from "./Card";
@@ -14,9 +13,10 @@ function AllBlogs() {
     try {
       const { allUserData } = await getUserBlogs("", "blogs");
       setBlogs([...allUserData]);
+      setLoading(false); // Set loading to false after data is fetched
     } catch (error) {
       console.error("Error fetching blogs:", error); // Error handling
-      setLoading(true); // Set loading to false in case of error
+      setLoading(false); // Set loading to false in case of error
     }
   };
   const greetingFunc = () => {
@@ -51,6 +51,11 @@ function AllBlogs() {
     }
   };
 
+  useEffect(() => {
+    greetingFunc();
+    getAllBlogs();
+  }, []);
+
   return (
     <div>
       {loading ? (
@@ -76,6 +81,8 @@ function AllBlogs() {
                   img={item.blogUrl}
                   id={item.id}
                   uid={item.uid}
+                  date={item.date}
+                  userName={item.userName}
                 />
               </div>
             ))}

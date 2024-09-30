@@ -8,6 +8,7 @@ import {
 } from "../firebase/firebaseFunc";
 import { useNavigate, useParams } from "react-router-dom";
 import { Triangle } from "react-loader-spinner";
+import Swal from "sweetalert2";
 
 function EditBlog() {
   const [isSubmitting, setIsSubmitting] = useState(false);

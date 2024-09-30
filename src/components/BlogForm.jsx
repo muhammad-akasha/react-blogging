@@ -28,7 +28,14 @@ function BlogForm({
                 required: isRequired ? "Image is Required" : false,
               })}
             />
-            <p>{errors.blogImg.message}</p>
+            <p
+              className="errClass"
+              style={{
+                opacity: errors.blogImg ? 1 : 0,
+              }}
+            >
+              {errors.blogImg?.message}
+            </p>
           </div>
           <div className="mb-5">
             <label
@@ -54,7 +61,12 @@ function BlogForm({
                 },
               })}
             />
-            <p>{errors.blogTitle.message}</p>
+            <p
+              className="errClass"
+              style={{ opacity: errors.blogTitle ? 1 : 0 }}
+            >
+              {errors.blogTitle?.message}
+            </p>
           </div>
           <div className="mb-5">
             <label
@@ -82,7 +94,14 @@ function BlogForm({
                 },
               })}
             />
-            <p>{errors.blogMessage.message}</p>
+            <p
+              className="errClass"
+              style={{
+                opacity: errors.blogMessage ? 1 : 0,
+              }}
+            >
+              {errors.blogMessage?.message}
+            </p>
           </div>
           <button
             type="submit"

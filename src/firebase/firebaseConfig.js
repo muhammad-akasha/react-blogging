@@ -10,6 +10,9 @@ import {
   doc,
   deleteDoc,
   updateDoc,
+  query,
+  orderBy,
+  Timestamp,
 } from "firebase/firestore";
 
 import {
@@ -63,8 +66,11 @@ export {
   doc,
   updateDoc,
   deleteDoc,
+  query,
+  orderBy,
   signInWithPopup,
   GithubAuthProvider,
   GoogleAuthProvider,
   FacebookAuthProvider,
+  Timestamp,
 };

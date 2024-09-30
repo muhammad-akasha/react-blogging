@@ -98,13 +98,9 @@ function SignUp() {
                   accept=".jpeg, .png, .jpg"
                 />
                 <p
+                  className="errClass"
                   style={{
-                    color: "red",
                     opacity: errors.profile ? 1 : 0,
-                    height: "auto",
-                    transition: "opacity 0.5s ease, height 0.5s ease",
-                    marginTop: "10px",
-                    fontSize: 13,
                   }}
                 >
                   {errors.profile?.message}
@@ -126,13 +122,9 @@ function SignUp() {
                   Email Address
                 </label>
                 <p
+                  className="errClass"
                   style={{
-                    color: "red",
                     opacity: errors.email ? 1 : 0,
-                    height: "auto",
-                    transition: "opacity 0.5s ease, height 0.5s ease",
-                    marginTop: "10px",
-                    fontSize: 13,
                   }}
                 >
                   {errors.email?.message}
@@ -154,13 +146,9 @@ function SignUp() {
                   })}
                 />
                 <p
+                  className="errClass"
                   style={{
-                    color: "red",
                     opacity: errors.password ? 1 : 0,
-                    height: "auto",
-                    transition: "opacity 0.5s ease, height 0.5s ease",
-                    marginTop: "10px",
-                    fontSize: 13,
                   }}
                 >
                   {errors.password?.message}
@@ -187,13 +175,9 @@ function SignUp() {
                   })}
                 />
                 <p
+                  className="errClass"
                   style={{
-                    color: "red",
                     opacity: errors.repeat_password ? 1 : 0,
-                    height: "auto",
-                    transition: "opacity 0.5s ease, height 0.5s ease",
-                    marginTop: "10px",
-                    fontSize: 13,
                   }}
                 >
                   {errors.repeat_password?.message}
@@ -218,13 +202,9 @@ function SignUp() {
                     })}
                   />
                   <p
+                    className="errClass"
                     style={{
-                      color: "red",
                       opacity: errors.first_name ? 1 : 0,
-                      height: "auto",
-                      transition: "opacity 0.5s ease, height 0.5s ease",
-                      marginTop: "10px",
-                      fontSize: 13,
                     }}
                   >
                     {errors.first_name?.message}
@@ -248,13 +228,9 @@ function SignUp() {
                     })}
                   />
                   <p
+                    className="errClass"
                     style={{
-                      color: "red",
                       opacity: errors.last_name ? 1 : 0,
-                      height: "auto",
-                      transition: "opacity 0.5s ease, height 0.5s ease",
-                      marginTop: "10px",
-                      fontSize: 13,
                     }}
                   >
                     {errors.last_name?.message}

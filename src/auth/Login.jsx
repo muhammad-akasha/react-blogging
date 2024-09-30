@@ -132,14 +132,9 @@ function Login() {
                   })}
                 />
                 <p
+                  className="errClass"
                   style={{
-                    color: "red",
                     opacity: errors.email ? 1 : 0,
-                    height: "auto",
-                    transition: "opacity 0.5s ease, height 0.5s ease",
-                    overflow: "hidden",
-                    marginTop: "10px",
-                    fontSize: 13,
                   }}
                 >
                   {errors.email?.message}
@@ -162,14 +157,9 @@ function Login() {
                   })}
                 />
                 <p
+                  className="errClass"
                   style={{
-                    color: "red",
                     opacity: errors.password ? 1 : 0,
-                    height: "auto",
-                    transition: "opacity 0.5s ease, height 0.5s ease",
-                    overflow: "hidden",
-                    marginTop: "10px",
-                    fontSize: 13,
                   }}
                 >
                   {errors.password?.message}

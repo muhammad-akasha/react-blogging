@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 import { Triangle } from "react-loader-spinner";
 import { getSingleDoc } from "../firebase/firebaseFunc";
 
@@ -75,6 +75,7 @@ function SingleBlog() {
           />
         </div>
       )}
+      <Outlet />
     </div>
   );
 }

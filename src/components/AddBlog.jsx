@@ -24,7 +24,7 @@ function AddBlog() {
   } = useForm();
   const [user, setUser] = useState(null); // Changed initial state to null
   const [userBlogs, setUserBlogs] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -37,19 +37,20 @@ function AddBlog() {
     });
   }, []);
 
+  const getData = async () => {
+    setLoading(true);
+    try {
+      const { singleUserData } = await getUserBlogs(user.uid, "blogs");
+      setUserBlogs(singleUserData);
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (user) {
-      const getData = async () => {
-        setLoading(true);
-        try {
-          const { singleUserData } = await getUserBlogs(user.uid, "blogs");
-          setUserBlogs(singleUserData);
-        } catch (error) {
-          console.error("Error fetching blogs:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
       getData();
     }
   }, [user]); // Add user as a dependency
@@ -73,16 +74,7 @@ function AddBlog() {
         user // current login user
       );
 
-      const newBlog = {
-        blogUrl,
-        blogTitle,
-        blogMessage,
-        uid: user.uid,
-        userName: user.displayName,
-        userPic: user.photoURL,
-        id: docId,
-      };
-      setUserBlogs((prevBlogs) => [newBlog, ...prevBlogs]);
+      getData();
       Swal.fire({
         position: "top",
         icon: "success",
@@ -158,6 +150,7 @@ function AddBlog() {
                   editBlog={editBlog}
                   deleteBlog={deleteBlog}
                   display={"inline"}
+                  date={item.date}
                 />
               </div>
             ))
